@@ -8,41 +8,47 @@ typedef struct
     float **v;
 } Matrix;
 
-float **allocate_matrix(unsigned int m, unsigned int n)
+void *allocate_memory(size_t size)
 {
-    float **A;
-    unsigned int i;
+    void *ptr;
 
-    A = (float **)malloc(m * sizeof(float *));
-
-    if (A == NULL)
+    ptr = malloc(size);
+    if (ptr == NULL)
     {
         fprintf(stderr, "Failed to allocate memory\n");
         exit(EXIT_FAILURE);
     }
-
-    for (i = 0; i < m; i++)
-    {
-        A[i] = (float *)malloc(n * sizeof(float));
-        if (A[i] == NULL)
-        {
-            fprintf(stderr, "Failed to allocate memory\n");
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    return A;
+    return ptr;
 }
 
-void **free_matrix(Matrix matrix)
+void free_memory(void **ptr)
+{
+    if (*ptr != NULL)
+    {
+        free(*ptr);
+        *ptr = NULL;
+    }
+}
+
+void allocate_matrix(unsigned int m, unsigned int n, Matrix *matrix)
 {
     unsigned int i;
 
-    for (i = 0; i < matrix.m; i++)
-        free(matrix.v[i]);
-    free(matrix.v);
+    matrix->v = (float **)allocate_memory(m * sizeof(float *));
 
-    return NULL;
+    for (i = 0; i < m; i++)
+    {
+        matrix->v[i] = (float *)allocate_memory(n * sizeof(float));
+    }
+}
+
+void free_matrix(Matrix *matrix)
+{
+    unsigned int i;
+
+    for (i = 0; i < matrix->m; i++)
+        free_memory((void **)&matrix->v[i]);
+    free_memory((void **)&matrix->v);
 }
 
 int main(int argc, char *argv[])
@@ -58,7 +64,7 @@ int main(int argc, char *argv[])
     unsigned int i, j;
     Matrix matrix;
 
-    matrix.v = allocate_matrix(rows, cols);
+    allocate_matrix(rows, cols, &matrix);
 
     for (i = 0; i < rows; i++)
     {
@@ -79,7 +85,7 @@ int main(int argc, char *argv[])
         printf("\n");
     }
 
-    free_matrix(matrix);
+    free_matrix(&matrix);
 
     return 0;
 }
